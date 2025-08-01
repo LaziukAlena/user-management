@@ -1,0 +1,14 @@
+{
+    "name": "user-management",
+    "version": "1.0.0",
+    "scripts": {
+      "build": "cd frontend && npm install && npm run build && cd .. && cd backend && npm install",  
+      "start": "node server.js",  
+      "frontend": "cd frontend && npm start",  
+      "backend": "cd backend && npm start"    
+    },
+    "dependencies": {
+     
+    }
+  }
+  
