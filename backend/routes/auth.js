@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
     const validPass = await bcrypt.compare(password, user.password);
     if (!validPass) return res.status(401).json({ error: 'Invalid credentials' });
 
-    // Update last_login
+   
     await db.query('UPDATE users SET last_login=NOW() WHERE id=$1', [user.id]);
 
     const token = jwt.sign(
