@@ -1,0 +1,47 @@
+body {
+    background-color: #f8f9fa;
+  }
+  
+  form input.form-control {
+    height: 45px;
+  }
+  
+  form .btn {
+    height: 45px;
+    font-weight: 500;
+  }
+  .auth-wrapper {
+    background-color: #f8f9fa;
+  }
+  
+  .image-side {
+    background: url('https://images.unsplash.com/photo-1605902711622-cfb43c4437f0') center/cover no-repeat;
+    background-color: #0d6efd; /* fallback */
+    color: white;
+    padding: 40px;
+  }
+  
+  .form-side {
+    background-color: white;
+  }
+  
+  form input.form-control {
+    height: 45px;
+    border-radius: 8px;
+  }
+  
+  form .btn {
+    height: 45px;
+    font-weight: 500;
+    border-radius: 8px;
+  }
+  .auth-wrapper {
+    background-color: #f8f9fa;
+  }
+  
+  .left-panel {
+    background-image: url('https://img.freepik.com/free-vector/modern-abstract-background_1048-1003.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+  
