@@ -29,7 +29,8 @@ export default function UsersTable({ token, onLogout }) {
 
   const fetchUsers = () => {
     setLoading(true);
-    fetch('http://localhost:3001/api/users', {
+    fetch('https://user-management-production-d5d1.up.railway.app/api/users', {
+
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -62,7 +63,8 @@ export default function UsersTable({ token, onLogout }) {
     else return;
 
     try {
-      const res = await fetch(`http://localhost:3001${url}`, {
+      const res = await fetch(`https://user-management-production-d5d1.up.railway.app${url}`, {
+
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
