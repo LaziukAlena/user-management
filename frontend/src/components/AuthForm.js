@@ -12,7 +12,8 @@ export default function AuthForm() {
     e.preventDefault();
     setError(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'https://user-management-production-d5d1.up.railway.app';
+    const API_URL = process.env.REACT_APP_API_URL || 'https://user-management-production-d5d1.up.railway.app';
+
     const url = `${API_URL}/api/auth/${isLogin ? 'login' : 'register'}`;
 
     const payload = isLogin ? { email, password } : { name, email, password };
