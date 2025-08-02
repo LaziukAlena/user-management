@@ -11,7 +11,9 @@ export default function AuthForm() {
     e.preventDefault();
     setError(null);
 
-    const url = `http://localhost:3001/api/auth/${isLogin ? 'login' : 'register'}`;
+    const API_URL = import.meta.env.VITE_API_URL || 'https://user-management-production-d5d1.up.railway.app';
+    const url = `${API_URL}/api/auth/${isLogin ? 'login' : 'register'}`;
+
     const payload = isLogin ? { email, password } : { name, email, password };
 
     try {
