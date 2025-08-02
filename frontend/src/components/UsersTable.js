@@ -7,7 +7,6 @@ import {
   Form,
   Toast,
   ToastContainer,
-  InputGroup,
 } from 'react-bootstrap';
 
 export default function UsersTable({ token, onLogout }) {
@@ -15,108 +14,71 @@ export default function UsersTable({ token, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [toast, setToast] = useState({ show: false, message: '', variant: '' });
-  const [search, setSearch] = useState('');
-  const [sortField, setSortField] = useState('id');
+  const [selected, setSelected] = useState([]);
+  const [sortField, setSortField] = useState('email');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [statusFilter, setStatusFilter] = useState('all');
-
-  const showToast = (message, variant = 'success') => {
-    setToast({ show: true, message, variant });
-    setTimeout(() => setToast({ show: false, message: '', variant: '' }), 3000);
-  };
-
-  const fetchUsers = () => {
-    setLoading(true);
-    fetch('https://user-management-production-d5d1.up.railway.app/api/users', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(await res.text() || 'Ошибка загрузки');
-        return res.json();
-      })
-      .then((data) => {
-        setUsers(data);
-        setLoading(false);
-        setError(null);
-        setSelectedIds([]);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  };
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const performAction = async (action) => {
-    if (!selectedIds.length) return;
-    setActionLoading(true);
-    let url = '';
-    if (action === 'block') url = '/api/users/block';
-    else if (action === 'unblock') url = '/api/users/unblock';
-    else if (action === 'delete') url = '/api/users/delete';
-    else return;
-
+  const fetchUsers = async () => {
+    setLoading(true);
     try {
-      const res = await fetch(`https://user-management-production-d5d1.up.railway.app${url}`, {
-        method: 'POST',
+      const res = await fetch('/api/users', {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ids: selectedIds }),
       });
-      if (!res.ok) throw new Error(await res.text());
-      showToast(`Действие "${action}" выполнено`, 'success');
+      const data = await res.json();
+      setUsers(data);
+    } catch (err) {
+      setError('Ошибка при загрузке пользователей');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelect = (id) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selected.length === users.length) {
+      setSelected([]);
+    } else {
+      setSelected(users.map((u) => u.id));
+    }
+  };
+
+  const performBulkAction = async (action) => {
+    if (selected.length === 0) return;
+
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/users/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action, ids: selected }),
+      });
+      if (!res.ok) throw new Error();
+      setToast({ show: true, message: `Успешно: ${action}` });
+      setSelected([]);
       fetchUsers();
     } catch (err) {
-      showToast(err.message || 'Ошибка', 'danger');
+      setToast({ show: true, message: `Ошибка при ${action}` });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const blockSelected = () => performAction('block');
-  const unblockSelected = () => performAction('unblock');
-  const deleteSelected = () => {
-    if (window.confirm('Вы действительно хотите удалить выбранных пользователей?')) {
-      performAction('delete');
-    }
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.length === users.length) setSelectedIds([]);
-    else setSelectedIds(users.map((u) => u.id));
-  };
-
-  const toggleSelectOne = (id) => {
-    if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter((sid) => sid !== id));
-    else setSelectedIds([...selectedIds, id]);
-  };
-
-  const filtered = users
-    .filter((u) => {
-      const matchStatus =
-        statusFilter === 'all' || u.status === statusFilter;
-      return (
-        matchStatus &&
-        (u.name?.toLowerCase().includes(search.toLowerCase()) ||
-          u.email?.toLowerCase().includes(search.toLowerCase()))
-      );
-    })
-    .sort((a, b) => {
-      const valA = a[sortField] || '';
-      const valB = b[sortField] || '';
-      return sortOrder === 'asc'
-        ? valA.localeCompare?.(valB) ?? 0
-        : valB.localeCompare?.(valA) ?? 0;
-    });
-
-  const toggleSort = (field) => {
+  const handleSort = (field) => {
     if (sortField === field) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -125,60 +87,20 @@ export default function UsersTable({ token, onLogout }) {
     }
   };
 
-  const renderStatus = (status) => {
-    switch (status) {
-      case 'active':
-        return <span className="text-success"><i className="bi bi-check-circle me-1" />Активен</span>;
-      case 'blocked':
-        return <span className="text-warning"><i className="bi bi-lock-fill me-1" />Заблокирован</span>;
-      case 'deleted':
-        return <span className="text-muted"><i className="bi bi-trash-fill me-1" />Удалён</span>;
-      default:
-        return status;
-    }
-  };
+  const sortedUsers = [...users].sort((a, b) => {
+    const fieldA = a[sortField];
+    const fieldB = b[sortField];
+    if (fieldA < fieldB) return sortOrder === 'asc' ? -1 : 1;
+    if (fieldA > fieldB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Пользователи</h2>
+        <h3>Пользователи</h3>
         <Button variant="outline-danger" onClick={onLogout}>
-          <i className="bi bi-box-arrow-right me-1"></i> Выйти
-        </Button>
-      </div>
-
-      <InputGroup className="mb-3">
-        <InputGroup.Text>
-          <i className="bi bi-search"></i>
-        </InputGroup.Text>
-        <Form.Control
-          placeholder="Поиск по имени или email"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </InputGroup>
-
-      <div className="mb-3">
-        <Form.Select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="all">Все статусы</option>
-          <option value="active">Активные</option>
-          <option value="blocked">Заблокированные</option>
-          <option value="deleted">Удалённые</option>
-        </Form.Select>
-      </div>
-
-      <div className="mb-3 d-flex flex-wrap gap-2">
-        <Button variant="warning" disabled={!selectedIds.length || actionLoading} onClick={blockSelected}>
-          <i className="bi bi-lock-fill me-1"></i> Заблокировать
-        </Button>
-        <Button variant="success" disabled={!selectedIds.length || actionLoading} onClick={unblockSelected}>
-          <i className="bi bi-unlock-fill me-1"></i> Разблокировать
-        </Button>
-        <Button variant="danger" disabled={!selectedIds.length || actionLoading} onClick={deleteSelected}>
-          <i className="bi bi-trash-fill me-1"></i> Удалить
+          Выйти
         </Button>
       </div>
 
@@ -187,51 +109,80 @@ export default function UsersTable({ token, onLogout }) {
       {loading ? (
         <Spinner animation="border" />
       ) : (
-        <Table striped hover responsive>
-          <thead>
-            <tr>
-              <th>
-                <Form.Check
-                  type="checkbox"
-                  checked={selectedIds.length === users.length && users.length > 0}
-                  onChange={toggleSelectAll}
-                />
-              </th>
-              <th onClick={() => toggleSort('id')} style={{ cursor: 'pointer' }}>ID</th>
-              <th onClick={() => toggleSort('name')} style={{ cursor: 'pointer' }}>Имя</th>
-              <th onClick={() => toggleSort('email')} style={{ cursor: 'pointer' }}>Email</th>
-              <th onClick={() => toggleSort('status')} style={{ cursor: 'pointer' }}>Статус</th>
-              <th onClick={() => toggleSort('last_login')} style={{ cursor: 'pointer' }}>Последний вход</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((u) => (
-              <tr key={u.id}>
-                <td>
+        <>
+          <Table bordered hover>
+            <thead>
+              <tr>
+                <th>
                   <Form.Check
-                    checked={selectedIds.includes(u.id)}
-                    onChange={() => toggleSelectOne(u.id)}
+                    checked={selected.length === users.length}
+                    onChange={handleSelectAll}
                   />
-                </td>
-                <td>{u.id}</td>
-                <td>{u.name || '—'}</td>
-                <td>{u.email}</td>
-                <td>{renderStatus(u.status)}</td>
-                <td>{u.last_login ? new Date(u.last_login).toLocaleString() : '—'}</td>
+                </th>
+                <th onClick={() => handleSort('email')} style={{ cursor: 'pointer' }}>
+                  Email {sortField === 'email' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th onClick={() => handleSort('status')} style={{ cursor: 'pointer' }}>
+                  Статус {sortField === 'status' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {sortedUsers.map((user) => (
+                <tr key={user.id}>
+                  <td>
+                    <Form.Check
+                      checked={selected.includes(user.id)}
+                      onChange={() => handleSelect(user.id)}
+                    />
+                  </td>
+                  <td>{user.email}</td>
+                  <td>{user.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+
+          <div className="d-flex gap-2">
+            <Button
+              variant="danger"
+              onClick={() => performBulkAction('delete')}
+              disabled={actionLoading}
+            >
+              Удалить
+            </Button>
+            <Button
+              variant="warning"
+              onClick={() => performBulkAction('block')}
+              disabled={actionLoading}
+            >
+              Заблокировать
+            </Button>
+            <Button
+              variant="success"
+              onClick={() => performBulkAction('unblock')}
+              disabled={actionLoading}
+            >
+              Разблокировать
+            </Button>
+          </div>
+        </>
       )}
 
       <ToastContainer position="bottom-end" className="p-3">
-        <Toast show={toast.show} bg={toast.variant} onClose={() => setToast({ show: false })} delay={3000} autohide>
-          <Toast.Body className={toast.variant === 'danger' ? 'text-white' : ''}>{toast.message}</Toast.Body>
+        <Toast
+          onClose={() => setToast({ ...toast, show: false })}
+          show={toast.show}
+          delay={3000}
+          autohide
+        >
+          <Toast.Body>{toast.message}</Toast.Body>
         </Toast>
       </ToastContainer>
     </div>
   );
 }
+
 
 
 
