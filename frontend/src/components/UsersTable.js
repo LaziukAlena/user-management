@@ -20,7 +20,7 @@ export default function UsersTable({ token, onLogout }) {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState('id');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [statusFilter, setStatusFilter] = useState('all'); // Фильтр по статусу
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const showToast = (message, variant = 'success') => {
     setToast({ show: true, message, variant });
@@ -30,7 +30,6 @@ export default function UsersTable({ token, onLogout }) {
   const fetchUsers = () => {
     setLoading(true);
     fetch('https://user-management-production-d5d1.up.railway.app/api/users', {
-
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -64,7 +63,6 @@ export default function UsersTable({ token, onLogout }) {
 
     try {
       const res = await fetch(`https://user-management-production-d5d1.up.railway.app${url}`, {
-
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -127,6 +125,19 @@ export default function UsersTable({ token, onLogout }) {
     }
   };
 
+  const renderStatus = (status) => {
+    switch (status) {
+      case 'active':
+        return <span className="text-success"><i className="bi bi-check-circle me-1" />Активен</span>;
+      case 'blocked':
+        return <span className="text-warning"><i className="bi bi-lock-fill me-1" />Заблокирован</span>;
+      case 'deleted':
+        return <span className="text-muted"><i className="bi bi-trash-fill me-1" />Удалён</span>;
+      default:
+        return status;
+    }
+  };
+
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -155,6 +166,7 @@ export default function UsersTable({ token, onLogout }) {
           <option value="all">Все статусы</option>
           <option value="active">Активные</option>
           <option value="blocked">Заблокированные</option>
+          <option value="deleted">Удалённые</option>
         </Form.Select>
       </div>
 
@@ -185,21 +197,11 @@ export default function UsersTable({ token, onLogout }) {
                   onChange={toggleSelectAll}
                 />
               </th>
-              <th onClick={() => toggleSort('id')} style={{ cursor: 'pointer' }}>
-                ID
-              </th>
-              <th onClick={() => toggleSort('name')} style={{ cursor: 'pointer' }}>
-                Имя
-              </th>
-              <th onClick={() => toggleSort('email')} style={{ cursor: 'pointer' }}>
-                Email
-              </th>
-              <th onClick={() => toggleSort('status')} style={{ cursor: 'pointer' }}>
-                Статус
-              </th>
-              <th onClick={() => toggleSort('last_login')} style={{ cursor: 'pointer' }}>
-                Последний вход
-              </th>
+              <th onClick={() => toggleSort('id')} style={{ cursor: 'pointer' }}>ID</th>
+              <th onClick={() => toggleSort('name')} style={{ cursor: 'pointer' }}>Имя</th>
+              <th onClick={() => toggleSort('email')} style={{ cursor: 'pointer' }}>Email</th>
+              <th onClick={() => toggleSort('status')} style={{ cursor: 'pointer' }}>Статус</th>
+              <th onClick={() => toggleSort('last_login')} style={{ cursor: 'pointer' }}>Последний вход</th>
             </tr>
           </thead>
           <tbody>
@@ -214,13 +216,7 @@ export default function UsersTable({ token, onLogout }) {
                 <td>{u.id}</td>
                 <td>{u.name || '—'}</td>
                 <td>{u.email}</td>
-                <td>
-                  {u.status === 'active' ? (
-                    <span className="text-success"><i className="bi bi-check-circle me-1" />Активен</span>
-                  ) : (
-                    <span className="text-danger"><i className="bi bi-x-circle me-1" />Заблокирован</span>
-                  )}
-                </td>
+                <td>{renderStatus(u.status)}</td>
                 <td>{u.last_login ? new Date(u.last_login).toLocaleString() : '—'}</td>
               </tr>
             ))}
@@ -236,6 +232,7 @@ export default function UsersTable({ token, onLogout }) {
     </div>
   );
 }
+
 
 
 
