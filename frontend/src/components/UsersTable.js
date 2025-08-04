@@ -33,17 +33,25 @@ export default function UsersTable({ token, onLogout }) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
+        if (res.status === 403) {
+          showToast('Вы были заблокированы', 'danger');
+          setTimeout(() => onLogout(), 1500);
+          return;
+        }
         if (!res.ok) throw new Error(await res.text() || 'Ошибка загрузки');
         return res.json();
       })
       .then((data) => {
-        setUsers(data);
-        setLoading(false);
-        setError(null);
-        setSelectedIds([]);
+        if (data) {
+          setUsers(data);
+          setError(null);
+          setSelectedIds([]);
+        }
       })
       .catch((err) => {
         setError(err.message);
+      })
+      .finally(() => {
         setLoading(false);
       });
   };
@@ -70,9 +78,26 @@ export default function UsersTable({ token, onLogout }) {
         },
         body: JSON.stringify({ ids: selectedIds }),
       });
+
+      if (res.status === 403) {
+        showToast('Вы были заблокированы', 'danger');
+        setTimeout(() => onLogout(), 1500);
+        return;
+      }
+
       if (!res.ok) throw new Error(await res.text());
+
       showToast(`Действие "${action}" выполнено`, 'success');
       fetchUsers();
+
+      if (action === 'block') {
+        const allIds = users.map((u) => u.id);
+        const blockedAll = selectedIds.length === allIds.length;
+        if (blockedAll) {
+          showToast('Все пользователи заблокированы. Выход из системы.', 'warning');
+          setTimeout(() => onLogout(), 1500);
+        }
+      }
     } catch (err) {
       showToast(err.message || 'Ошибка', 'danger');
     } finally {
@@ -166,7 +191,6 @@ export default function UsersTable({ token, onLogout }) {
           <option value="all">Все статусы</option>
           <option value="active">Активные</option>
           <option value="blocked">Заблокированные</option>
-          
         </Form.Select>
       </div>
 
