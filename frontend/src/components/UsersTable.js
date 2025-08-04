@@ -43,7 +43,8 @@ export default function UsersTable({ token, onLogout }) {
       })
       .then((data) => {
         if (data) {
-          setUsers(data);
+          const visibleUsers = data.filter((u) => u.status !== 'deleted');
+          setUsers(visibleUsers);
           setError(null);
           setSelectedIds([]);
         }
@@ -124,29 +125,22 @@ export default function UsersTable({ token, onLogout }) {
   };
 
   const filtered = users
-  .filter((u) => {
-    
-    if (u.status === 'deleted') return false;
-
-    
-    if (statusFilter === 'all') {
-      return u.status === 'active' || u.status === 'blocked';
-    }
-
-    return u.status === statusFilter;
-  })
-  .filter((u) =>
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase())
-  )
-  .sort((a, b) => {
-    const valA = a[sortField] || '';
-    const valB = b[sortField] || '';
-    return sortOrder === 'asc'
-      ? valA.localeCompare?.(valB) ?? 0
-      : valB.localeCompare?.(valA) ?? 0;
-  });
-
+    .filter((u) => {
+      const matchStatus =
+        statusFilter === 'all' || u.status === statusFilter;
+      return (
+        matchStatus &&
+        (u.name?.toLowerCase().includes(search.toLowerCase()) ||
+          u.email?.toLowerCase().includes(search.toLowerCase()))
+      );
+    })
+    .sort((a, b) => {
+      const valA = a[sortField] || '';
+      const valB = b[sortField] || '';
+      return sortOrder === 'asc'
+        ? valA.localeCompare?.(valB) ?? 0
+        : valB.localeCompare?.(valA) ?? 0;
+    });
 
   const toggleSort = (field) => {
     if (sortField === field) {
@@ -163,8 +157,6 @@ export default function UsersTable({ token, onLogout }) {
         return <span className="text-success"><i className="bi bi-check-circle me-1" />Активен</span>;
       case 'blocked':
         return <span className="text-warning"><i className="bi bi-lock-fill me-1" />Заблокирован</span>;
-      case 'deleted':
-        return <span className="text-muted"><i className="bi bi-trash-fill me-1" />Удалён</span>;
       default:
         return status;
     }
@@ -172,17 +164,15 @@ export default function UsersTable({ token, onLogout }) {
 
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
         <h2>Пользователи</h2>
-        <Button variant="outline-danger" onClick={onLogout}>
+        <Button variant="outline-danger" onClick={onLogout} className="mt-2 mt-md-0">
           <i className="bi bi-box-arrow-right me-1"></i> Выйти
         </Button>
       </div>
 
       <InputGroup className="mb-3">
-        <InputGroup.Text>
-          <i className="bi bi-search"></i>
-        </InputGroup.Text>
+        <InputGroup.Text><i className="bi bi-search"></i></InputGroup.Text>
         <Form.Control
           placeholder="Поиск по имени или email"
           value={search}
@@ -257,7 +247,9 @@ export default function UsersTable({ token, onLogout }) {
 
       <ToastContainer position="bottom-end" className="p-3">
         <Toast show={toast.show} bg={toast.variant} onClose={() => setToast({ show: false })} delay={3000} autohide>
-          <Toast.Body className={toast.variant === 'danger' ? 'text-white' : ''}>{toast.message}</Toast.Body>
+          <Toast.Body className={toast.variant === 'danger' ? 'text-white' : ''}>
+            {toast.message}
+          </Toast.Body>
         </Toast>
       </ToastContainer>
     </div>
