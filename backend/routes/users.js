@@ -69,11 +69,11 @@ router.post('/delete', async (req, res) => {
 
   try {
     const result = await db.query(
-      'UPDATE users SET status = $1 WHERE id = ANY($2::int[])',
-      ['deleted', ids]
+      'DELETE FROM users WHERE id = ANY($1::int[])',
+      [ids]
     );
-    console.log(`Удалено пользователей (логически): ${result.rowCount}`);
-    res.json({ message: 'Users deleted successfully' });
+    console.log(`Физически удалено пользователей: ${result.rowCount}`);
+    res.json({ message: 'Users permanently deleted' });
   } catch (err) {
     console.error('Ошибка при удалении пользователей:', err);
     res.status(500).json({ error: 'Failed to delete users' });
@@ -81,3 +81,4 @@ router.post('/delete', async (req, res) => {
 });
 
 module.exports = router;
+
