@@ -166,7 +166,7 @@ export default function UsersTable({ token, onLogout }) {
           <option value="all">Все статусы</option>
           <option value="active">Активные</option>
           <option value="blocked">Заблокированные</option>
-          <option value="deleted">Удалённые</option>
+          
         </Form.Select>
       </div>
 
