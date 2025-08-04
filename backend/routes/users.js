@@ -10,7 +10,8 @@ router.get('/', async (req, res) => {
   try {
     const result = await db.query(`
       SELECT id, name, email, status, last_login 
-      FROM users 
+      FROM users
+      WHERE status != 'deleted' 
       ORDER BY id ASC
     `);
     res.json(result.rows);
