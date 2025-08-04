@@ -38,13 +38,11 @@ export default function UsersTable({ token, onLogout }) {
           setTimeout(() => onLogout(), 1500);
           return;
         }
-        console.log('Ответ после удаления:', res.status);
 
         if (!res.ok) throw new Error(await res.text() || 'Ошибка загрузки');
         return res.json();
       })
       .then((data) => {
-        console.log('Сервер вернул пользователей:', data);
         if (data) {
           const visibleUsers = data.filter((u) => u.status !== 'deleted');
           setUsers(visibleUsers);
@@ -129,9 +127,7 @@ export default function UsersTable({ token, onLogout }) {
 
   const filtered = users
     .filter((u) => {
-      const matchStatus =
-        u.status !== 'deleted' &&
-        (statusFilter === 'all' || u.status === statusFilter);
+      const matchStatus = statusFilter === 'all' || u.status === statusFilter;
       return (
         matchStatus &&
         (u.name?.toLowerCase().includes(search.toLowerCase()) ||
