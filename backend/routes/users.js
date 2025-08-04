@@ -10,8 +10,8 @@ router.get('/', async (req, res) => {
   try {
     const result = await db.query(`
       SELECT id, name, email, status, last_login 
-      FROM users
-      WHERE status != 'deleted' 
+      FROM users 
+      WHERE status != 'deleted'
       ORDER BY id ASC
     `);
     res.json(result.rows);
@@ -20,7 +20,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
-
 
 router.post('/block', async (req, res) => {
   const { ids } = req.body;
