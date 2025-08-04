@@ -124,22 +124,29 @@ export default function UsersTable({ token, onLogout }) {
   };
 
   const filtered = users
-    .filter((u) => {
-      const matchStatus =
-        statusFilter === 'all' || u.status === statusFilter;
-      return (
-        matchStatus &&
-        (u.name?.toLowerCase().includes(search.toLowerCase()) ||
-          u.email?.toLowerCase().includes(search.toLowerCase()))
-      );
-    })
-    .sort((a, b) => {
-      const valA = a[sortField] || '';
-      const valB = b[sortField] || '';
-      return sortOrder === 'asc'
-        ? valA.localeCompare?.(valB) ?? 0
-        : valB.localeCompare?.(valA) ?? 0;
-    });
+  .filter((u) => {
+    
+    if (u.status === 'deleted') return false;
+
+    
+    if (statusFilter === 'all') {
+      return u.status === 'active' || u.status === 'blocked';
+    }
+
+    return u.status === statusFilter;
+  })
+  .filter((u) =>
+    u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.email?.toLowerCase().includes(search.toLowerCase())
+  )
+  .sort((a, b) => {
+    const valA = a[sortField] || '';
+    const valB = b[sortField] || '';
+    return sortOrder === 'asc'
+      ? valA.localeCompare?.(valB) ?? 0
+      : valB.localeCompare?.(valA) ?? 0;
+  });
+
 
   const toggleSort = (field) => {
     if (sortField === field) {
