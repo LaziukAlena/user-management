@@ -125,15 +125,17 @@ export default function UsersTable({ token, onLogout }) {
   };
 
   const filtered = users
-    .filter((u) => {
-      const matchStatus =
-        statusFilter === 'all' || u.status === statusFilter;
-      return (
-        matchStatus &&
-        (u.name?.toLowerCase().includes(search.toLowerCase()) ||
-          u.email?.toLowerCase().includes(search.toLowerCase()))
-      );
-    })
+  .filter((u) => {
+    const matchStatus =
+      statusFilter === 'all' || u.status === statusFilter;
+    return (
+      u.status !== 'deleted' &&
+      matchStatus &&
+      (u.name?.toLowerCase().includes(search.toLowerCase()) ||
+        u.email?.toLowerCase().includes(search.toLowerCase()))
+    );
+  })
+
     .sort((a, b) => {
       const valA = a[sortField] || '';
       const valB = b[sortField] || '';
