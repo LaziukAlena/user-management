@@ -42,6 +42,7 @@ export default function UsersTable({ token, onLogout }) {
         return res.json();
       })
       .then((data) => {
+        console.log('Сервер вернул пользователей:', data);
         if (data) {
           const visibleUsers = data.filter((u) => u.status !== 'deleted');
           setUsers(visibleUsers);
