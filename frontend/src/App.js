@@ -1,41 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthForm from './components/AuthForm';
 import UsersTable from './components/UsersTable';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [isRegistering, setIsRegistering] = useState(false);
 
-  const handleLogin = async (email, password, setError) => {
-    try {
-      const res = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Login failed');
-      }
-
-      const data = await res.json();
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      setError('');
-    } catch (err) {
-      console.error('Login error:', err.message);
-      setError(err.message);
-    }
-  };
+  useEffect(() => {
+    const handleStorage = () => {
+      setToken(localStorage.getItem('token'));
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     setToken(null);
-  };
-
-  const toggleForm = () => {
-    setIsRegistering((prev) => !prev);
   };
 
   return (
@@ -51,11 +31,7 @@ function App() {
       }}
     >
       {!token ? (
-        <AuthForm
-          onLogin={handleLogin}
-          isRegistering={isRegistering}
-          toggleForm={toggleForm}
-        />
+        <AuthForm />
       ) : (
         <UsersTable token={token} onLogout={handleLogout} />
       )}
