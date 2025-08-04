@@ -38,6 +38,8 @@ export default function UsersTable({ token, onLogout }) {
           setTimeout(() => onLogout(), 1500);
           return;
         }
+        console.log('Ответ после удаления:', res.status);
+
         if (!res.ok) throw new Error(await res.text() || 'Ошибка загрузки');
         return res.json();
       })
